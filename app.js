@@ -5,17 +5,15 @@ var bodyParser = require('body-parser');
 var jsdom = require("jsdom");
 var strUrl = 'http://m.correios.com.br/movel/buscaCepConfirma.do';
 var iconv = require('iconv-lite');
+var port = process.env.PORT || 3000;
 
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080
-var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1'
+app.set('port', port);
 
-app.set('port', server_port);
-
-var server = app.listen(app.get('port'), server_ip_address, function () {
+var server = app.listen(app.get('port'), function () {
 	console.log('Express server listening on port ' + server.address().port);
 });
 
