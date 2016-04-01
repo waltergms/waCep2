@@ -16,6 +16,6 @@
 		"request": "^2.69.0"
 	},
 	"scripts": {
-		"start": "node app.js"
+		"start": "node start.js"
 	}
 }
