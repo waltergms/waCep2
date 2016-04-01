@@ -14,5 +14,9 @@
     "jquery": "^2.2.1",
     "jsdom": "^8.0.4",
     "request": "^2.69.0"
+  },
+  {
+  "scripts": {
+    "start": "node app.js"
   }
 }
