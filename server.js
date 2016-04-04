@@ -1,4 +1,4 @@
-﻿var express = require('express');
+var express = require('express');
 var app = express();
 var request = require('request');
 var bodyParser = require('body-parser');
@@ -18,46 +18,69 @@ var server = app.listen(app.get('port'), function () {
 });
 
 app.get('/', function (req, res) {
-	res.type('json');               // => 'application/json'
-	res.set('Content-Type', 'application/json');
-	var strCep = req.query.cep;
-	GetCepCorreios(strCep, function (result) {
-		res.send(result);
-	});
+	try {
+		res.type('json');               // => 'application/json'
+		res.set('Content-Type', 'application/json');
+		var strCep = req.query.cep;
+		strCep = strCep.replace(/[^0-9.]/g, '').replace(/\./g, '');
+		if(strCep.length==8){
+			GetCepCorreios(strCep, function (result) {
+				res.send(result);
+			});
+		} else {
+			res.send("CEP invalido!");
+		}
+	} catch (e) {
+		res.send(new Error(e));
+	}
 });
 
 function GetCepCorreios(strCep, callback) {
-	request.post({
-		encoding: null,
-		url: strUrl, form: {
-			'cepEntrada' : strCep,
-			'tipoCep' : '',
-			'cepTemp' : '',
-			'metodo' : 'buscarCep'
-		}
-	}, function (err, httpResponse, body) {
-		var bodyWithCorrectEncoding = iconv.decode(body, 'iso-8859-1');
-		GetJsonCep(bodyWithCorrectEncoding, function (result) { 
-			callback(result);
+	try {
+		request.post({
+			encoding: null,
+			url: strUrl, form: {
+				'cepEntrada' : strCep,
+				'tipoCep' : '',
+				'cepTemp' : '',
+				'metodo' : 'buscarCep'
+			}
+		}, function (err, httpResponse, body) {
+			if(err!= null){
+				callback(new Error(err));
+			}else{
+				var bodyWithCorrectEncoding = iconv.decode(body, 'iso-8859-1');
+				GetJsonCep(bodyWithCorrectEncoding, function (result) {
+					callback(result);
+				});
+			}
 		});
-	});
+	} catch (e) {
+		callback(new Error(e));
+	}
 }
 
 function GetJsonCep(body, callback) {
-	jsdom.env(body, function (err, window) {
-		var address = [];
-		var jsonAddress = { Logradouro : "", Endereco : "", Numero : "", Bairro : "", UF : "", Cidade  : "" };
-		var $ = require("jquery")(window);
-		$('.respostadestaque').each(function () {
-			console.log(" -", $.trim($(this).text()));
-			address.push($.trim($(this).text()));
+	try {
+		jsdom.env(body, function (err, window) {
+			var address = [];
+			var jsonAddress = { Logradouro : "", Endereco : "", Numero : "", Bairro : "", UF : "", Cidade  : "" };
+			var $ = require("jquery")(window);
+			$('.respostadestaque').each(function () {
+				console.log(" -", $.trim($(this).text()));
+				address.push($.trim($(this).text()));
+			});
+			if(address.length > 0){
+				jsonAddress.Logradouro = $.trim(address[0].split('-')[0].split(' ')[0]);
+				jsonAddress.Endereco = $.trim(address[0].split('-')[0].substr(jsonAddress.Logradouro.length));
+				jsonAddress.Numero = $.trim(address[0].split('de ')[1]);
+				jsonAddress.Bairro = $.trim(address[1]);
+				jsonAddress.Cidade = $.trim(address[2].split('/')[0]);
+				jsonAddress.UF = $.trim(address[2].split('/')[1]);
+			}
+			callback(jsonAddress);
 		});
-		jsonAddress.Logradouro = $.trim(address[0].split('-')[0].split(' ')[0]);
-		jsonAddress.Endereco = $.trim(address[0].split('-')[0].substr(jsonAddress.Logradouro.length));
-		jsonAddress.Numero = $.trim(address[0].split('de ')[1]);
-		jsonAddress.Bairro = $.trim(address[1]);
-		jsonAddress.Cidade = $.trim(address[2].split('/')[0]);
-		jsonAddress.UF = $.trim(address[2].split('/')[1]);
-		callback(jsonAddress);
-	});
+	} catch (e) {
+		callback(new Error(e));
+	}
 }
