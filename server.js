@@ -28,12 +28,13 @@ app.get('/', function (req, res) {
 				res.send(result);
 			});
 		} else {
-			res.send({ "Error:" : "CEP invalido!" });
+			res.send({ "Error" : "CEP invalido!" });
 		}
 	} catch (e) {
-		res.send({ "Error:" : "CEP invalido!" });
+		res.send({ "Error" : "CEP invalido!" });
 	}
 });
+
 
 function GetCepCorreios(strCep, callback) {
 	try {
